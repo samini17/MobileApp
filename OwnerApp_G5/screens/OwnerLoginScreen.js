@@ -7,12 +7,18 @@ const OwnerLoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  //function to sign in user with firebase auth
   const handleLogin = async () => {
+    console.log(`sign in clicked`);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate('CreateListing');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      console.log(`DEBUG --- Login successful. userCredentials : ${JSON.stringify(userCredential)}`);
+      Alert.alert(`Success`, `Login Successful`)
+      
+      navigation.navigate('ManageBookings');
     } catch (error) {
-      Alert.alert('Login Error', error.message);
+      console.log(`DEBUG --- Error while login user : ${error}`);
     }
   };
 
@@ -31,7 +37,7 @@ const OwnerLoginScreen = ({ navigation }) => {
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
+        secureTextEntry={true}
       />
       <Button title="Login" onPress={handleLogin} />
     </View>
