@@ -1,44 +1,116 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Button, Alert } from 'react-native';
-import { collection, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, onSnapshot, doc, updateDoc, getDocs, where } from 'firebase/firestore';
 import { db } from '../FirebaseConfig';
 import { auth } from "../FirebaseConfig";
+import { onAuthStateChanged } from 'firebase/auth';
+import { StackActions, useIsFocused } from "@react-navigation/native";
 
-
-const ManageBookingsScreen = ({navigation, route}) => {
+const ManageBookingsScreen = ({ navigation, route }) => {
   const [loggedInUser, setLoggedInUser] = useState(null)
   const [bookings, setBookings] = useState([]);
 
-  const unsubscribe = () => {
-    const unsubscribe = onSnapshot(collection(db, 'bookings'), (snapshot) => {
-      const bookingData = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      setBookings(bookingData);
-    });
+  const createListingPressed = () => {
 
-    return unsubscribe;
   }
 
-  useEffect(()=>{
-    //listen for any changes in authentication changes
-    const listener = onAuthStateChanged(auth, (userFromFirebaseAuth) => {
-        //check if userFromFirebaseAuth is available
-        if (userFromFirebaseAuth){
-            //if yes, that means we have access to currently logged in user
-            console.log(`DEBUG --- userFromFirebaseAuth : ${JSON.stringify(userFromFirebaseAuth)}`);
-            console.log(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+  const logoutPressed = async () => {
+    console.log(`logout pressed`);
 
-            Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
-            //set the user info to loggedInUser state
-            setLoggedInUser(userFromFirebaseAuth)
-            unsubscribe()
-        }else{
-            //if not, we don't have access to currently logged in user
-            setLoggedInUser(null)
+    try {
+      await signOut(auth)
+
+      console.log(`DEBUG --- 'Logout successful`);
+
+      //navigate to first screen (sign in screen)
+      navigation.dispatch(StackActions.popToTop())
+
+    } catch (err) {
+      console.log(`DEBUG --- Error while logging out : ${err}`);
+    }
+  }
+
+  //get All document from booking
+  const getAll = async (userEmail) => {
+    console.log("Retrieving all documents from the 'bookings' collection...")
+
+    try {
+      const querySnapshot = await getDocs(collection(db, "bookings"))
+
+      const resultsFromDB = []
+
+      querySnapshot.forEach((currDoc) => {
+        console.log(`Document id: ${currDoc.id}`)
+        console.log("Document data:")
+        console.log(currDoc.data())
+
+        const booking = {
+          id: currDoc.id,
+          ...currDoc.data()
         }
-    })
 
-    return listener
-}, [])
+        console.log(booking)
+        if (booking.ownerEmail == userEmail) {
+          resultsFromDB.push(booking)
+        }
+      })
+
+      setBookings(resultsFromDB)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  // useEffect(() => {
+  //   //listen for any changes in authentication changes
+  //   const listener = onAuthStateChanged(auth, (userFromFirebaseAuth) => {
+  //     //check if userFromFirebaseAuth is available
+  //     if (userFromFirebaseAuth) {
+  //       //if yes, that means we have access to currently logged in user
+  //       console.log(`DEBUG --- userFromFirebaseAuth : ${JSON.stringify(userFromFirebaseAuth)}`);
+  //       console.log(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+
+  //       Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+  //       //set the user info to loggedInUser state
+  //       setLoggedInUser(userFromFirebaseAuth)
+  //       getAll()
+  //     } else {
+  //       //if not, we don't have access to currently logged in user
+  //       setLoggedInUser(null)
+  //     }
+  //   })
+
+  //   return listener
+  // }, [])
+
+  const isUserOnThisScreen = useIsFocused()
+  useEffect(() => {
+    if (!isUserOnThisScreen)
+      console.log(`MANAGE BOOKING NOT LOADED: ${isUserOnThisScreen}`)
+    else {
+      console.log(`MANAGE BOOKING IS LOADED: ${isUserOnThisScreen}`)
+
+      //listen for any changes in authentication changes
+      const listener = onAuthStateChanged(auth, (userFromFirebaseAuth) => {
+        //check if userFromFirebaseAuth is available
+        if (userFromFirebaseAuth) {
+          //if yes, that means we have access to currently logged in user
+          console.log(`DEBUG --- userFromFirebaseAuth : ${JSON.stringify(userFromFirebaseAuth)}`);
+          console.log(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+
+          Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+          //set the user info to loggedInUser state
+          getAll(userFromFirebaseAuth.email)
+          setLoggedInUser(userFromFirebaseAuth)
+        } else {
+          //if not, we don't have access to currently logged in user
+          setLoggedInUser(null)
+        }
+      })
+
+      return listener
+    }
+  }, [isUserOnThisScreen])
 
   const cancelBooking = async (bookingId) => {
     try {
@@ -46,6 +118,7 @@ const ManageBookingsScreen = ({navigation, route}) => {
         status: 'CANCELED',
       });
       Alert.alert('Success', 'Booking canceled');
+      getAll()
     } catch (error) {
       Alert.alert('Error', error.message);
     }
@@ -53,15 +126,17 @@ const ManageBookingsScreen = ({navigation, route}) => {
 
   return (
     <View style={styles.container}>
+      <Text style={{marginBottom: 16, textAlign: "center"}}>Hello {loggedInUser.email}, theses are your current bookings...</Text>
       <FlatList
         data={bookings}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.bookingItem}>
-            <Text>Item: {item.itemName}</Text>
-            <Text>Renter: {item.renterName}</Text>
+            <Text>itemID: {item.itemID}</Text>
+            <Text>OwnerEmail: {item.ownerEmail}</Text>
+            <Text>RenterEmail: {item.renterEmail}</Text>
             <Text>Status: {item.status}</Text>
-            <Text>Confirmation Code: {item.confirmationCode}</Text>
+            <Text>Confirmation Code: {item.bookingID}</Text>
             {item.status !== 'CANCELED' && (
               <Button title="Cancel Booking" onPress={() => cancelBooking(item.id)} />
             )}

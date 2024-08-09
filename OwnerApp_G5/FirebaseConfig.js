@@ -10,15 +10,23 @@ import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore"
 
 // Your web app's Firebase configuration
-const firebaseConfig = {
-  apiKey: "AIzaSyBCAj1YR8jroIoIzG-pL535Wp-PdrFsgmE",
-  authDomain: "rentanthing-28dd4.firebaseapp.com",
-  projectId: "rentanthing-28dd4",
-  storageBucket: "rentanthing-28dd4.appspot.com",
-  messagingSenderId: "482782187348",
-  appId: "1:482782187348:web:063c7aff1a78ce43f742c1"
-};
+// const firebaseConfig = {
+//   apiKey: "AIzaSyBCAj1YR8jroIoIzG-pL535Wp-PdrFsgmE",
+//   authDomain: "rentanthing-28dd4.firebaseapp.com",
+//   projectId: "rentanthing-28dd4",
+//   storageBucket: "rentanthing-28dd4.appspot.com",
+//   messagingSenderId: "482782187348",
+//   appId: "1:482782187348:web:063c7aff1a78ce43f742c1"
+// };
 
+const firebaseConfig = {
+  apiKey: "AIzaSyC6IileYxtY2BnDeEFt5dkFWuILVQgTmBs",
+  authDomain: "finalprojectrentathing.firebaseapp.com",
+  projectId: "finalprojectrentathing",
+  storageBucket: "finalprojectrentathing.appspot.com",
+  messagingSenderId: "628221148629",
+  appId: "1:628221148629:web:8fb090f40021420b87115c"
+};
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
