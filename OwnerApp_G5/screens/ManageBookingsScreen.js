@@ -7,11 +7,13 @@ import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { StackActions, useIsFocused } from "@react-navigation/native";
 
 const ManageBookingsScreen = ({ navigation, route }) => {
+  const routeEmail = route.params
   const [loggedInUser, setLoggedInUser] = useState(null)
   const [bookings, setBookings] = useState([]);
 
   const createListingPressed = () => {
     console.log(`create listing pressed`);
+    navigation.navigate('CreateListing');
   }
 
   const logoutPressed = async () => {
@@ -120,14 +122,13 @@ const ManageBookingsScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={{ marginBottom: 16, textAlign: "center" }}>Hello [insert userEmail/Name here], theses are your current bookings...</Text>
+      <Text style={{ marginBottom: 16, textAlign: "center" }}>Hello <Text style={{fontWeight: "bold"}}>{routeEmail}</Text>, theses are your current bookings...</Text>
       <FlatList
         data={bookings}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.bookingItem}>
             <Text>itemID: {item.itemID}</Text>
-            <Text>Price: ${item.price}</Text>
             <Text>OwnerEmail: {item.ownerEmail}</Text>
             <Text>RenterEmail: {item.renterEmail}</Text>
             <Text>Status: {item.status}</Text>
