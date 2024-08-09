@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Button, Alert } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Button, Alert, Pressable } from 'react-native';
 import { collection, onSnapshot, doc, updateDoc, getDocs, where } from 'firebase/firestore';
 import { db } from '../FirebaseConfig';
 import { auth } from "../FirebaseConfig";
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { StackActions, useIsFocused } from "@react-navigation/native";
 
 const ManageBookingsScreen = ({ navigation, route }) => {
@@ -11,7 +11,7 @@ const ManageBookingsScreen = ({ navigation, route }) => {
   const [bookings, setBookings] = useState([]);
 
   const createListingPressed = () => {
-
+    console.log(`create listing pressed`);
   }
 
   const logoutPressed = async () => {
@@ -61,28 +61,22 @@ const ManageBookingsScreen = ({ navigation, route }) => {
     }
   }
 
-  // useEffect(() => {
-  //   //listen for any changes in authentication changes
-  //   const listener = onAuthStateChanged(auth, (userFromFirebaseAuth) => {
-  //     //check if userFromFirebaseAuth is available
-  //     if (userFromFirebaseAuth) {
-  //       //if yes, that means we have access to currently logged in user
-  //       console.log(`DEBUG --- userFromFirebaseAuth : ${JSON.stringify(userFromFirebaseAuth)}`);
-  //       console.log(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+  useEffect(() => {
+    navigation.setOptions({
+      headerLeft: () => (
+        <Pressable style={{marginLeft: 10}} onPress={logoutPressed}>
+          <Text>Logout</Text>
+        </Pressable>
+      ),
+      headerRight: () => (
+        <Pressable style={{marginRight: 10}} onPress={createListingPressed}>
+          <Text>New Listing</Text>
+        </Pressable>
+      ),
+    });
+  }, [navigation])
 
-  //       Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
-  //       //set the user info to loggedInUser state
-  //       setLoggedInUser(userFromFirebaseAuth)
-  //       getAll()
-  //     } else {
-  //       //if not, we don't have access to currently logged in user
-  //       setLoggedInUser(null)
-  //     }
-  //   })
-
-  //   return listener
-  // }, [])
-
+  //run every time user is on this screen
   const isUserOnThisScreen = useIsFocused()
   useEffect(() => {
     if (!isUserOnThisScreen)
@@ -100,8 +94,8 @@ const ManageBookingsScreen = ({ navigation, route }) => {
 
           Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
           //set the user info to loggedInUser state
-          getAll(userFromFirebaseAuth.email)
           setLoggedInUser(userFromFirebaseAuth)
+          getAll(userFromFirebaseAuth.email)
         } else {
           //if not, we don't have access to currently logged in user
           setLoggedInUser(null)
@@ -126,13 +120,14 @@ const ManageBookingsScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={{marginBottom: 16, textAlign: "center"}}>Hello {loggedInUser.email}, theses are your current bookings...</Text>
+      <Text style={{ marginBottom: 16, textAlign: "center" }}>Hello [insert userEmail/Name here], theses are your current bookings...</Text>
       <FlatList
         data={bookings}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.bookingItem}>
             <Text>itemID: {item.itemID}</Text>
+            <Text>Price: ${item.price}</Text>
             <Text>OwnerEmail: {item.ownerEmail}</Text>
             <Text>RenterEmail: {item.renterEmail}</Text>
             <Text>Status: {item.status}</Text>

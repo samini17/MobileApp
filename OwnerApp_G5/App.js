@@ -13,8 +13,8 @@ const OwnerApp = () => {
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={OwnerLoginScreen} />
-        <Stack.Screen name="CreateListing" component={CreateListingScreen} />
-        <Stack.Screen name="ManageBookings" component={ManageBookingsScreen} />
+        <Stack.Screen name="CreateListing" options={{ title: "New Listing", headerleft: null }} component={CreateListingScreen} />
+        <Stack.Screen name="ManageBookings" options={{ title: "Manage Bookings", headerleft: null }} component={ManageBookingsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
