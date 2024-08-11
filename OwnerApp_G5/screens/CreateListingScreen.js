@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, StyleSheet, Alert, Image } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, Button, StyleSheet, Alert, Image, Pressable, ScrollView, SafeAreaView } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { collection, addDoc } from 'firebase/firestore';
+import { StackActions } from '@react-navigation/native';
 import { db } from '../FirebaseConfig';
 
 const CreateListingScreen = ({ navigation, route }) => {
@@ -64,56 +65,62 @@ const CreateListingScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <TextInput
-        style={styles.input}
-        placeholder="Brand"
-        value={brand}
-        onChangeText={setBrand}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Model"
-        value={model}
-        onChangeText={setModel}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Screen Size"
-        value={screenSize}
-        onChangeText={setScreenSize}
-      />
-      {/* <Button title="Pick Image" onPress={pickImage} />
+      <SafeAreaView>
+
+        <ScrollView>
+          <TextInput
+            style={styles.input}
+            placeholder="Brand"
+            value={brand}
+            onChangeText={setBrand}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Model"
+            value={model}
+            onChangeText={setModel}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Screen Size"
+            value={screenSize}
+            onChangeText={setScreenSize}
+          />
+          {/* <Button title="Pick Image" onPress={pickImage} />
       {imageUri ? <Image source={{ uri: imageUri }} style={styles.image} /> : null} */}
 
-      <TextInput
-        style={styles.input}
-        placeholder="Enter image URL here"
-        value={imageURL}
-        onChangeText={setImageURL}
-      />
-      {imageURL ? <Image source={{ uri: imageURL }} style={styles.image} height={800} width={800} /> : <Image source={ require("../assets/product-placeholder-wp.jpg") } style={styles.image} height={100} width={100} />}
+          <TextInput
+            style={styles.input}
+            placeholder="Enter image URL here"
+            value={imageURL}
+            onChangeText={setImageURL}
+          />
+          {imageURL ? <Image source={{ uri: imageURL }} style={styles.image} height={800} width={800} /> : <Image source={require("../assets/product-placeholder-wp.jpg")} style={styles.image} height={100} width={100} />}
 
-      <TextInput
-        style={styles.input}
-        placeholder="City"
-        value={city}
-        onChangeText={setCity}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Address"
-        value={address}
-        onChangeText={setAddress}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Price per day"
-        value={price}
-        onChangeText={setPrice}
-        keyboardType="numeric"
-      />
-      <Button title="Create Listing" onPress={handleCreateListing} />
+          <TextInput
+            style={styles.input}
+            placeholder="City"
+            value={city}
+            onChangeText={setCity}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Address"
+            value={address}
+            onChangeText={setAddress}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Price per day"
+            value={price}
+            onChangeText={setPrice}
+            keyboardType="numeric"
+          />
+          <Button title="Create Listing" onPress={handleCreateListing} />
+        </ScrollView>
+      </SafeAreaView>
     </View>
+
   );
 };
 
