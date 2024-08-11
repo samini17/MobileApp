@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Button, Alert, Pressable } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Button, Alert, Pressable, Image } from 'react-native';
 import { collection, onSnapshot, doc, updateDoc, getDocs, deleteDoc, where } from 'firebase/firestore';
 import { db } from '../FirebaseConfig';
 import { auth } from "../FirebaseConfig";
@@ -14,6 +14,11 @@ const ManageListingsScreen = ({ navigation, route }) => {
   const CreateListingPressed = () => {
     console.log(`create listing pressed`);
     navigation.navigate('CreateListing', routeEmail);
+  }
+
+  const ManageBookingPressed = () => {
+    console.log(`making booking pressed`);
+    navigation.dispatch(StackActions.pop(1))
   }
 
   const deleteListing = async (listingId) => {
@@ -45,7 +50,6 @@ const ManageListingsScreen = ({ navigation, route }) => {
             id: currDoc.id,
             ...currDoc.data()
           }
-          console.log("HELLOOOOOOOOOOOOOOOOOOOOOOOOOOO")
           console.log(bookingItem)
           resultsFromDB.push(bookingItem)
         }
@@ -59,6 +63,11 @@ const ManageListingsScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     navigation.setOptions({
+      headerLeft: () => (
+        <Pressable style={{ marginLeft: 10 }} onPress={ManageBookingPressed}>
+          <Text>Manage Bookings</Text>
+        </Pressable>
+      ),
       headerRight: () => (
         <Pressable style={{ marginRight: 10 }} onPress={CreateListingPressed}>
           <Text>Create Listings</Text>
@@ -99,14 +108,17 @@ const ManageListingsScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Text>Hello</Text>
+      <Text style={{ marginBottom: 16, textAlign: "center" }}>Hello <Text style={{ fontWeight: "bold" }}>{routeEmail}</Text>, theses are your current listings...</Text>
       <FlatList
         data={items}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.bookingItem}>
-            <Text>Laptop: {item.brand} {item.screenSize}" {item.model}</Text>
-            <Text>Total Price: ${item.price}</Text>
+            <Text><Text style={{ fontWeight: "bold" }}>ID:</Text> {item.itemID}</Text>
+            <Text><Text style={{ fontWeight: "bold" }}>Laptop:</Text> {item.brand} {item.screenSize}" {item.model}</Text>
+            <Image source={{ uri: item.imageURL }} height={50} width={50} />
+            <Text><Text style={{ fontWeight: "bold" }}>Renting Price:</Text> ${item.price}</Text>
+            <Text style={{marginBottom: 8}}><Text style={{ fontWeight: "bold" }}>Address:</Text> {item.address}, {item.city}</Text>
             <Button title="Delete Listing" onPress={() => deleteListing(item.id)} />
           </View>
         )}
