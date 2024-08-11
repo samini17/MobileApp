@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import OwnerLoginScreen from './screens/OwnerLoginScreen';
 import CreateListingScreen from './screens/CreateListingScreen';
+import ManageListingsScreen from './screens/ManageListingsScreen';
 import ManageBookingsScreen from './screens/ManageBookingsScreen';
 
 const Stack = createStackNavigator();
@@ -14,6 +15,7 @@ const OwnerApp = () => {
       <Stack.Navigator initialRouteName="Login">
         <Stack.Screen name="Login" component={OwnerLoginScreen} />
         <Stack.Screen name="CreateListing" options={{ title: "New Listing", headerleft: null }} component={CreateListingScreen} />
+        <Stack.Screen name="ManageListings" options={{ title: "Manage Listings", headerleft: null }} component={ManageListingsScreen} />
         <Stack.Screen name="ManageBookings" options={{ title: "Manage Bookings", headerleft: null }} component={ManageBookingsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
