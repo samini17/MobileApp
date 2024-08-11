@@ -14,7 +14,6 @@ const ManageBookingsScreen = ({ navigation, route }) => {
   const [items, setItems] = useState([]);
 
   function searchUserByEmail(email) {
-    console.log(users)
     for (let i = 0; i < users.length; i++) {
       if (users[i].email === email) {
         console.log("searchUserByEmail: " + users[i])
@@ -24,7 +23,6 @@ const ManageBookingsScreen = ({ navigation, route }) => {
   }
 
   function searchItemByID(id) {
-    console.log(items)
     for (let i = 0; i < items.length; i++) {
       if (items[i].id === id) {
         console.log("searchItemByID: " + items[i])
@@ -70,13 +68,8 @@ const ManageBookingsScreen = ({ navigation, route }) => {
 
         if (currDoc.data().ownerEmail == userEmail) {
 
-          console.log("searchUserByEmail")
           const renter = searchUserByEmail(currDoc.data().renterEmail)
-          console.log("Renter: " + renter)
-
-          console.log("searchItemByID")
           const bookingItem = searchItemByID(currDoc.data().itemID)
-          console.log("Laptop: " + bookingItem)
 
           const booking = {
             id: currDoc.id,
@@ -118,7 +111,6 @@ const ManageBookingsScreen = ({ navigation, route }) => {
       })
 
       setUsers(resultsFromDB)
-      console.log(users)
     } catch (err) {
       console.log(err)
     }
@@ -146,7 +138,6 @@ const ManageBookingsScreen = ({ navigation, route }) => {
       })
 
       setItems(resultsFromDB)
-      console.log(items)
     } catch (err) {
       console.log(err)
     }
@@ -185,10 +176,13 @@ const ManageBookingsScreen = ({ navigation, route }) => {
 
           Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
           //set the user info to loggedInUser state
-          setLoggedInUser(userFromFirebaseAuth)
-          getAllUsers()
-          getAllItems()
-          getAllBooking(userFromFirebaseAuth.email)
+          const promises = [getAllUsers(), getAllItems()]
+          Promise.allSettled(promises).then(() => {
+            setLoggedInUser(userFromFirebaseAuth)
+            console.log(loggedInUser)
+            console.log("start running get all booking")
+            getAllBooking(userFromFirebaseAuth.email)
+          })
         } else {
           //if not, we don't have access to currently logged in user
           setLoggedInUser(null)
@@ -205,7 +199,11 @@ const ManageBookingsScreen = ({ navigation, route }) => {
         status: 'CANCELED',
       });
       Alert.alert('Success', 'Booking canceled');
-      getAllBooking()
+      const promises = [getAllUsers(), getAllItems()]
+      Promise.allSettled(promises).then(() => {
+        console.log("start running get all booking")
+        getAllBooking(userFromFirebaseAuth.email)
+      })
     } catch (error) {
       Alert.alert('Error', error.message);
     }
@@ -219,14 +217,15 @@ const ManageBookingsScreen = ({ navigation, route }) => {
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.bookingItem}>
-            
+
             {/* need await, won't work until item and user getting is done before booking getting start */}
 
-            {/* <Text>Laptop: {item.bookingItem.brand} {item.bookingItem.screenSize}" {item.bookingItem.model}</Text>
-            <Text>Total Price: ${item.bookingItem.price}</Text>
-            <Text>Renter: {item.renter.name}</Text> */}
-            <Text>Status: {item.status}</Text>
-            <Text>Confirmation Code: {item.bookingID}</Text>
+            <Text><Text style={{ fontWeight: "bold" }}>Laptop:</Text> {item.bookingItem.brand} {item.bookingItem.screenSize}" {item.bookingItem.model}</Text>
+            <Text><Text style={{ fontWeight: "bold" }}>Total Price:</Text> ${item.bookingItem.price}</Text>
+            <Text><Text style={{ fontWeight: "bold" }}>Renter:</Text> {item.renter.name}</Text>
+            <Image source={{ uri: item.bookingItem.imageURL }} height={50} width={50} />
+            <Text>Status: <Text style={{ fontWeight: "bold" }}>{item.status}</Text></Text>
+            <Text style={{marginBottom: 8}}><Text style={{ fontWeight: "bold" }}>Confirmation Code:</Text> {item.bookingID}</Text>
             {item.status !== 'CANCELED' && (
               <Button title="Cancel Booking" onPress={() => cancelBooking(item.id)} />
             )}
