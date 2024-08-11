@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, StyleSheet, Alert, Image, Pressable, ScrollView, SafeAreaView } from 'react-native';
-import * as ImagePicker from 'expo-image-picker';
 import { collection, addDoc } from 'firebase/firestore';
-import { StackActions } from '@react-navigation/native';
+import { StackActions, useIsFocused } from '@react-navigation/native';
 import { db } from '../FirebaseConfig';
+import { auth } from "../FirebaseConfig";
+import { onAuthStateChanged } from 'firebase/auth';
 
-const CreateListingScreen = ({ navigation, route }) => {
-  const routeEmail = route.params
+const CreateListingScreen = ({ navigation }) => {
+  const [loggedInUser, setLoggedInUser] = useState(null)
   const [brand, setBrand] = useState('');
   const [model, setModel] = useState('');
   const [screenSize, setScreenSize] = useState('');
@@ -14,6 +15,36 @@ const CreateListingScreen = ({ navigation, route }) => {
   const [city, setCity] = useState('');
   const [address, setAddress] = useState('');
   const [price, setPrice] = useState('');
+
+
+  //run every time user is on this screen
+  const isUserOnThisScreen = useIsFocused()
+  useEffect(() => {
+    if (!isUserOnThisScreen)
+      console.log(`MANAGE LISTING NOT LOADED: ${isUserOnThisScreen}`)
+    else {
+      console.log(`MANAGE LISTING IS LOADED: ${isUserOnThisScreen}`)
+
+      //listen for any changes in authentication changes
+      const listener = onAuthStateChanged(auth, (userFromFirebaseAuth) => {
+        //check if userFromFirebaseAuth is available
+        if (userFromFirebaseAuth) {
+          //if yes, that means we have access to currently logged in user
+          console.log(`DEBUG --- userFromFirebaseAuth : ${JSON.stringify(userFromFirebaseAuth)}`);
+          console.log(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+
+          // Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+          //set the user info to loggedInUser state
+          setLoggedInUser(userFromFirebaseAuth)
+        } else {
+          //if not, we don't have access to currently logged in user
+          setLoggedInUser(null)
+        }
+      })
+
+      return listener
+    }
+  }, [isUserOnThisScreen])
 
   // const pickImage = async () => {
   //   const result = await ImagePicker.launchImageLibraryAsync({
@@ -54,7 +85,7 @@ const CreateListingScreen = ({ navigation, route }) => {
         city: city,
         address: address,
         price: price,
-        ownerEmail: routeEmail
+        ownerEmail: loggedInUser.email
       };
       await addDoc(collection(db, 'bookingItems'), listing);
       Alert.alert('Success', 'Listing created successfully');

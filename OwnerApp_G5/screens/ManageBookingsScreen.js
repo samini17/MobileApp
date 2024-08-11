@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, Button, Alert, Pressable, Image } from 'react-native';
-import { collection, doc, updateDoc, getDocs, where } from 'firebase/firestore';
+import { collection, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../FirebaseConfig';
 import { auth } from "../FirebaseConfig";
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { StackActions, useIsFocused } from "@react-navigation/native";
 
-const ManageBookingsScreen = ({ navigation, route }) => {
-  const routeEmail = route.params
+const ManageBookingsScreen = ({ navigation }) => {
   const [loggedInUser, setLoggedInUser] = useState(null)
   const [bookings, setBookings] = useState([]);
   const [users, setUsers] = useState([]);
@@ -35,11 +34,12 @@ const ManageBookingsScreen = ({ navigation, route }) => {
 
   const ManageListingsPressed = () => {
     console.log(`manage listing pressed`);
-    navigation.navigate('ManageListings', routeEmail);
+    navigation.navigate('ManageListings');
   }
 
   const logoutPressed = async () => {
     console.log(`logout pressed`);
+    setBookingEnd(false)
 
     try {
       await signOut(auth)
@@ -55,7 +55,7 @@ const ManageBookingsScreen = ({ navigation, route }) => {
   }
 
   //get All document from booking from owner email
-  const getAllBooking = async (userEmail) => {
+  const getAllBooking = async () => {
     console.log("Retrieving all documents from the 'bookings' collection...")
 
     try {
@@ -68,7 +68,7 @@ const ManageBookingsScreen = ({ navigation, route }) => {
         console.log("Booking data:")
         console.log(currDoc.data())
 
-        if (currDoc.data().ownerEmail == userEmail) {
+        if (currDoc.data().ownerEmail == loggedInUser.email) {
 
           const renter = searchUserByEmail(currDoc.data().renterEmail)
           const bookingItem = searchItemByID(currDoc.data().itemID)
@@ -175,21 +175,23 @@ const ManageBookingsScreen = ({ navigation, route }) => {
           console.log(`DEBUG --- userFromFirebaseAuth : ${JSON.stringify(userFromFirebaseAuth)}`);
           console.log(`Currently logged in user : ${userFromFirebaseAuth.email}`)
 
-          Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+          // Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
           //set the user info to loggedInUser state
           setLoggedInUser(userFromFirebaseAuth)
-        } else {
+
+          //when getAll users and Items finishes retrieving data, bookingStart signal is set to true 
+          //but users and items array is still empty until the screen refresh
+          const promises = [getAllUsers(), getAllItems()]
+          Promise.allSettled(promises).then(() => {
+            console.log("start running get all booking")
+            setBookingStart(true)
+          })
+
+        }
+        else {
           //if not, we don't have access to currently logged in user
           setLoggedInUser(null)
         }
-      })
-
-      //when getAll users and Items finishes retrieving data, bookingStart signal is set to true 
-      //but users and items array is still empty until the screen refresh
-      const promises = [getAllUsers(), getAllItems()]
-      Promise.allSettled(promises).then(() => {
-        console.log("start running get all booking")
-        setBookingStart(true)
       })
 
       return listener
@@ -202,22 +204,21 @@ const ManageBookingsScreen = ({ navigation, route }) => {
   //when it finishes, set bookingEnd to true, sigifying that booking have completed
   //but bookings array is still empty until the screen refresh again
   useEffect(() => {
-    if(bookingStart == true){
-      getAllBooking(routeEmail).then(() => {
+    if (bookingStart == true) {
+      getAllBooking().then(() => {
         setBookingEnd(true)
       })
     }
-}, [bookingStart]);
+  }, [bookingStart]);
 
-//when booking end is updated, this useEffect take action and refresh the screen again
-//screen refreshes -> bookings array no longer empty
-//since bookingEnd is true, flatlist finally renders
-useEffect(() => {
-  if(bookingEnd == true){
-    console.log("Booking End: ")
-    console.log(bookings)
-  }
-}, [bookingEnd]);
+  //when booking end is updated, this useEffect take action and refresh the screen again
+  //screen refreshes -> bookings array no longer empty
+  //since bookingEnd is true, flatlist finally renders
+  useEffect(() => {
+    if (bookingEnd == true) {
+      setBookingStart(false)
+    }
+  }, [bookingEnd]);
 
   const cancelBooking = async (bookingId) => {
     try {
@@ -228,7 +229,8 @@ useEffect(() => {
       const promises = [getAllUsers(), getAllItems()]
       Promise.allSettled(promises).then(() => {
         console.log("start running get all booking")
-        getAllBooking(routeEmail)
+        setBookingStart(true)
+        setBookingEnd(false)
       })
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -237,7 +239,13 @@ useEffect(() => {
 
   return (
     <View style={styles.container}>
-      <Text style={{ marginBottom: 16, textAlign: "center" }}>Hello <Text style={{ fontWeight: "bold" }}>{routeEmail}</Text>, theses are your current bookings...</Text>
+      {
+        (bookingEnd == true)
+          ?
+          <Text style={{ marginBottom: 16, textAlign: "center" }}>Hello <Text style={{ fontWeight: "bold" }}>{loggedInUser.email}</Text>, theses are your current bookings...</Text>
+          :
+          <Text></Text>
+      }
       {
         // Flatlist only render when bookingEnd signal is true
         (bookingEnd == true)

@@ -11,9 +11,9 @@ const RenterApp = () => {
   return (
     <NavigationContainer>
       <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={RenterLoginScreen} />
-        <Stack.Screen name="Search" component={SearchScreen} />
-        <Stack.Screen name="MyReservations" component={MyReservationsScreen} />
+        <Stack.Screen name="Login" options={{ title: "Login to Renter", headerleft: null }} component={RenterLoginScreen} />
+        <Stack.Screen name="Search" options={{ title: "Search for Laptop", headerleft: null }} component={SearchScreen} />
+        <Stack.Screen name="MyReservations" options={{ title: "My Laptop Reservations", headerleft: null }} component={MyReservationsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

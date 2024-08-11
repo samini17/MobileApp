@@ -13,9 +13,8 @@ const OwnerLoginScreen = ({ navigation }) => {
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       
-      //console.log(`DEBUG --- Login successful. userCredentials : ${JSON.stringify(userCredential)}`);
       Alert.alert(`Success`, `Login Successful`)
-      navigation.navigate('ManageBookings', userCredential.user.email);
+      navigation.navigate('ManageBookings');
     } catch (error) {
       console.log(`DEBUG --- Error while login user : ${error}`);
     }
