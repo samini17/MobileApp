@@ -58,6 +58,7 @@ const CreateListingScreen = ({ navigation, route }) => {
       };
       await addDoc(collection(db, 'bookingItems'), listing);
       Alert.alert('Success', 'Listing created successfully');
+      navigation.dispatch(StackActions.pop(1));
     } catch (error) {
       Alert.alert('Error', error.message);
     }
