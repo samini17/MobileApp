@@ -209,7 +209,7 @@ const SearchScreen = () => {
           <Callout>
             <View>
               <Text style={{ fontWeight: 'bold' }}>Toronto</Text>
-              <Text>Description</Text>
+              <Text>Placeholder marker</Text>
             </View>
           </Callout>
         </Marker>
