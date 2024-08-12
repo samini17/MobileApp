@@ -2,14 +2,14 @@ import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, Button, Alert, Platform, StatusBar, Text, SafeAreaView, Pressable, Image } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../FirebaseConfig';
 import { auth } from "../FirebaseConfig";
 import { onAuthStateChanged } from 'firebase/auth';
 import { StackActions, useIsFocused, useLinkProps } from "@react-navigation/native";
 
 
-const SearchScreen = () => {
+const SearchScreen = ({navigation}) => {
   const [userLat, setUserLat] = useState(null)
   const [userLng, setUserLng] = useState(null)
   const [userCity, setUserCity] = useState(null)
@@ -127,8 +127,21 @@ const SearchScreen = () => {
     }
   }
 
-  const handleBookNow = () => {
-    Alert.alert('Booking', `Booking for ${items[selectedItemIndex].model} is pending approval`);
+  const handleBookNow = async () => {
+    try {
+      const booking = {
+        bookingID: Math.floor(Math.random() * (999999 - 100000 + 1)) + 100000,
+        itemID: items[selectedItemIndex].itemID,
+        ownerEmail: items[selectedItemIndex].ownerEmail,
+        renterEmail: loggedInUser.email,
+        status: "CONFIRMED"
+      };
+      await addDoc(collection(db, 'bookings'), booking);
+      Alert.alert('Booking', `Booking for ${items[selectedItemIndex].model} is pending approval`);
+      navigation.dispatch(StackActions.pop(1));
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
   };
 
   //get All document from booking from owner email
@@ -231,7 +244,7 @@ const SearchScreen = () => {
                       coordinate={{ latitude: itemCoords[index].latitude, longitude: itemCoords[index].longitude }}>
                       <Pressable
                         style={{ backgroundColor: "white", borderRadius: 10, borderColor: "white", borderWidth: 3 }}>
-                        <Text>{item.price}</Text>
+                        <Text>${item.price}</Text>
                       </Pressable>
                     </Marker>
                   )
