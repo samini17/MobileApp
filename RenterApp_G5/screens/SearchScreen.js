@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, Button, Alert, Platform, StatusBar, Text, SafeAreaView } from 'react-native';
+import { View, StyleSheet, Button, Alert, Platform, StatusBar, Text, SafeAreaView, Pressable } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { collection, getDocs } from 'firebase/firestore';
@@ -17,6 +17,7 @@ const SearchScreen = () => {
   const [items, setItems] = useState(null)
   const [getItemStart, setGetItemStart] = useState(false)
   const [getItemEnd, setGetItemEnd] = useState(false)
+  const [itemCoords, setItemCoords] = useState([])
 
   // ref - used to move the map to a specific location
   const mapRef = useRef(null)
@@ -42,9 +43,9 @@ const SearchScreen = () => {
     }
   }
 
-  const doFwdGeocode = async () => {
+  const doFwdGeocode = async (address) => {
     try {
-      const geocodedLocation = await Location.geocodeAsync()
+      const geocodedLocation = await Location.geocodeAsync(address)
       console.log(geocodedLocation) // array of possible locations
 
       const result = geocodedLocation[0]
@@ -53,7 +54,10 @@ const SearchScreen = () => {
         return
       }
 
+      setItemCoords(itemCoords => [...itemCoords, result])
+
       console.log(result)
+      console.log("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
       console.log(`Latitude: ${result.latitude}`)
       console.log(`Longitude: ${result.longitude}`)
     } catch (err) {
@@ -114,7 +118,7 @@ const SearchScreen = () => {
       }
       mapRef.current.animateToRegion(myRegion, 1000)
 
-       // Wait for getCurrLocation to finish
+      // Wait for getCurrLocation to finish
       await doReverseGeocode(location.coords.latitude, location.coords.longitude)
     } catch (err) {
       console.log(err)
@@ -134,7 +138,7 @@ const SearchScreen = () => {
 
       const resultsFromDB = []
 
-      querySnapshot.forEach((currDoc) => {
+      for (const currDoc of querySnapshot.docs) {
         if (currDoc.data().city == cityName) {
           console.log(`Items id: ${currDoc.id}`)
           console.log("Items data:")
@@ -143,10 +147,10 @@ const SearchScreen = () => {
             id: currDoc.id,
             ...currDoc.data()
           }
+          await doFwdGeocode(bookingItem.address)
           resultsFromDB.push(bookingItem)
         }
-      })
-
+      }
       setItems(resultsFromDB)
     } catch (err) {
       console.log(err)
@@ -211,29 +215,38 @@ const SearchScreen = () => {
 
   return (
     <SafeAreaView styles={styles.container}>
-      {
-        //(getItemEnd == true)
-          //?
+
+      <View>
+        <MapView style={styles.map} ref={mapRef}>
           <View>
-            <MapView style={styles.map} ref={mapRef}>
-              <Marker
-                coordinate={{ latitude: 43.814670, longitude: -79.285060 }}
-              >
-                <Callout>
-                  <View>
-                    <Text style={{ fontWeight: 'bold' }}>Toronto</Text>
-                    <Text>Placeholder marker</Text>
-                  </View>
-                </Callout>
-              </Marker>
-            </MapView>
-            <Text>User Lat: {userLat}</Text>
-            <Text>User long: {userLng}</Text>
-            <Text>User City: {userCity}</Text>
+            {(items != null)
+              ?
+              <View>
+                {items.map((item, index) => {
+                  return (
+                    // place holder latitude and longtitude
+                    // should be
+                    // <Marker coordinate={{ latitude: itemCoords[index].latitude, longitude: itemCoords[index].longitude }}>
+                    // -- Fixed --
+                    <Marker coordinate={{ latitude: itemCoords[index].latitude, longitude: itemCoords[index].longitude }}>
+                      <Pressable style={{ backgroundColor: "white", borderRadius: 10, borderColor: "white", borderWidth: 3 }}>
+                        <Text>{item.price}</Text>
+                      </Pressable>
+                    </Marker>
+                  )
+                })
+                }
+              </View>
+              :
+              <View></View>}
           </View>
-          //:
-          //<View></View>
-      }
+        </MapView>
+        <Text>User Lat: {userLat}</Text>
+        <Text>User long: {userLng}</Text>
+        <Text>User City: {userCity}</Text>
+      </View>
+
+
     </SafeAreaView>
   );
 };
