@@ -112,8 +112,8 @@ const SearchScreen = () => {
       }
       mapRef.current.animateToRegion(myRegion, 1000)
 
-      // Wait for getCurrLocation to finish
-      await doReverseGeocode()
+      // // Wait for getCurrLocation to finish
+      // await doReverseGeocode()
     } catch (err) {
       console.log(err)
     }
@@ -171,11 +171,11 @@ const SearchScreen = () => {
           //set the user info to loggedInUser state
           setLoggedInUser(userFromFirebaseAuth)
 
-          const promises = [getCurrLocation()]
-          Promise.allSettled(promises).then(() => {
-            console.log("start running get all booking")
-            setGetItemStart(true)
-          })
+          // const promises = [getCurrLocation()]
+          // Promise.allSettled(promises).then(() => {
+          //   setGetItemStart(true)
+          // })
+          getCurrLocation();
         } else {
           //if not, we don't have access to currently logged in user
           setLoggedInUser(null)
@@ -187,6 +187,12 @@ const SearchScreen = () => {
   }, [isUserOnThisScreen])
 
   useEffect(() => {
+    doReverseGeocode().then(() => {
+      setGetItemStart(true)
+    })
+  }, [userLat]);
+
+  useEffect(() => {
     if (getItemStart == true) {
       getAllItems().then(() => {
         setGetItemEnd(true)
@@ -196,27 +202,36 @@ const SearchScreen = () => {
 
   useEffect(() => {
     if (getItemEnd == true) {
+      console.log(items)
       setGetItemStart(false)
     }
   }, [getItemEnd]);
 
   return (
     <SafeAreaView styles={styles.container}>
-      <MapView style={styles.map} ref={mapRef}>
-        <Marker
-          coordinate={{ latitude: 43.814670, longitude: -79.285060 }}
-        >
-          <Callout>
-            <View>
-              <Text style={{ fontWeight: 'bold' }}>Toronto</Text>
-              <Text>Placeholder marker</Text>
-            </View>
-          </Callout>
-        </Marker>
-      </MapView>
-      <Text>User Lat: {userLat}</Text>
-      <Text>User long: {userLng}</Text>
-      <Text>User City: {userCity}</Text>
+      {
+        (getItemEnd == true)
+          ?
+          <View>
+            <MapView style={styles.map} ref={mapRef}>
+              <Marker
+                coordinate={{ latitude: 43.814670, longitude: -79.285060 }}
+              >
+                <Callout>
+                  <View>
+                    <Text style={{ fontWeight: 'bold' }}>Toronto</Text>
+                    <Text>Placeholder marker</Text>
+                  </View>
+                </Callout>
+              </Marker>
+            </MapView>
+            <Text>User Lat: {userLat}</Text>
+            <Text>User long: {userLng}</Text>
+            <Text>User City: {userCity}</Text>
+          </View>
+          :
+          <View></View>
+      }
     </SafeAreaView>
   );
 };
