@@ -60,13 +60,13 @@ const SearchScreen = () => {
       console.log(err)
     }
   }
-  const doReverseGeocode = async () => {
+  const doReverseGeocode = async (userLatitude, userLongitude) => {
     try {
       // create the coordinates object
       // properties here: https://docs.expo.dev/versions/latest/sdk/location/#locationgeocodedlocation
       const coords = {
-        latitude: parseFloat(userLat),
-        longitude: parseFloat(userLng)
+        latitude: parseFloat(userLatitude),
+        longitude: parseFloat(userLongitude)
       }
       // returns an array of LocationGeocodedAddress objects
       // properties of this object are here: https://docs.expo.dev/versions/latest/sdk/location/#locationgeocodedaddress
@@ -80,6 +80,8 @@ const SearchScreen = () => {
       }
 
       setUserCity(result.city)
+
+      await getAllItems(result.city)
 
     } catch (err) {
       console.log(err)
@@ -112,8 +114,8 @@ const SearchScreen = () => {
       }
       mapRef.current.animateToRegion(myRegion, 1000)
 
-      // // Wait for getCurrLocation to finish
-      // await doReverseGeocode()
+       // Wait for getCurrLocation to finish
+      await doReverseGeocode(location.coords.latitude, location.coords.longitude)
     } catch (err) {
       console.log(err)
     }
@@ -124,7 +126,7 @@ const SearchScreen = () => {
   };
 
   //get All document from booking from owner email
-  const getAllItems = async () => {
+  const getAllItems = async (cityName) => {
     console.log("Retrieving all documents from the 'bookingItems' collection...")
 
     try {
@@ -133,7 +135,7 @@ const SearchScreen = () => {
       const resultsFromDB = []
 
       querySnapshot.forEach((currDoc) => {
-        if (currDoc.data().city == userCity) {
+        if (currDoc.data().city == cityName) {
           console.log(`Items id: ${currDoc.id}`)
           console.log("Items data:")
           console.log(currDoc.data())
@@ -186,7 +188,7 @@ const SearchScreen = () => {
     }
   }, [isUserOnThisScreen])
 
-  useEffect(() => {
+  /* useEffect(() => {
     doReverseGeocode().then(() => {
       setGetItemStart(true)
     })
@@ -205,13 +207,13 @@ const SearchScreen = () => {
       console.log(items)
       setGetItemStart(false)
     }
-  }, [getItemEnd]);
+  }, [getItemEnd]); */
 
   return (
     <SafeAreaView styles={styles.container}>
       {
-        (getItemEnd == true)
-          ?
+        //(getItemEnd == true)
+          //?
           <View>
             <MapView style={styles.map} ref={mapRef}>
               <Marker
@@ -229,8 +231,8 @@ const SearchScreen = () => {
             <Text>User long: {userLng}</Text>
             <Text>User City: {userCity}</Text>
           </View>
-          :
-          <View></View>
+          //:
+          //<View></View>
       }
     </SafeAreaView>
   );
