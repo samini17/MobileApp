@@ -7,12 +7,16 @@ const RenterLoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
 
+  //function to sign in user with firebase auth
   const handleLogin = async () => {
+    console.log(`sign in clicked`);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigation.navigate('Search');
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      
+      Alert.alert(`Success`, `Login Successful`)
+      navigation.navigate('MyReservations');
     } catch (error) {
-      Alert.alert('Login Error', error.message);
+      console.log(`DEBUG --- Error while login user : ${error}`);
     }
   };
 
@@ -31,7 +35,7 @@ const RenterLoginScreen = ({ navigation }) => {
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
+        secureTextEntry={true}
       />
       <Button title="Login" onPress={handleLogin} />
     </View>

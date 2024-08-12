@@ -1,22 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, FlatList, StyleSheet, Button, Alert, Pressable } from 'react-native';
-import { collection, doc, updateDoc, getDocs, where } from 'firebase/firestore';
+import { View, Text, FlatList, StyleSheet, Button, Alert, Pressable, Image } from 'react-native';
+import { collection, doc, updateDoc, getDocs } from 'firebase/firestore';
 import { db } from '../FirebaseConfig';
 import { auth } from "../FirebaseConfig";
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { StackActions, useIsFocused } from "@react-navigation/native";
 
-const ManageBookingsScreen = ({ navigation, route }) => {
-  const routeEmail = route.params
+const ManageBookingsScreen = ({ navigation }) => {
   const [loggedInUser, setLoggedInUser] = useState(null)
   const [bookings, setBookings] = useState([]);
   const [users, setUsers] = useState([]);
   const [items, setItems] = useState([]);
+  //booking start signify when to start getAll booking
+  const [bookingStart, setBookingStart] = useState(false)
+  //booking end signify when getAll booking is finished
+  const [bookingEnd, setBookingEnd] = useState(false)
 
   function searchUserByEmail(email) {
     for (let i = 0; i < users.length; i++) {
       if (users[i].email === email) {
-        console.log("searchUserByEmail: " + users[i])
         return users[i];
       }
     }
@@ -24,8 +26,7 @@ const ManageBookingsScreen = ({ navigation, route }) => {
 
   function searchItemByID(id) {
     for (let i = 0; i < items.length; i++) {
-      if (items[i].id === id) {
-        console.log("searchItemByID: " + items[i])
+      if (items[i].itemID === id) {
         return items[i];
       }
     }
@@ -33,11 +34,12 @@ const ManageBookingsScreen = ({ navigation, route }) => {
 
   const ManageListingsPressed = () => {
     console.log(`manage listing pressed`);
-    navigation.navigate('ManageListings', routeEmail);
+    navigation.navigate('ManageListings');
   }
 
   const logoutPressed = async () => {
     console.log(`logout pressed`);
+    setBookingEnd(false)
 
     try {
       await signOut(auth)
@@ -53,7 +55,7 @@ const ManageBookingsScreen = ({ navigation, route }) => {
   }
 
   //get All document from booking from owner email
-  const getAllBooking = async (userEmail) => {
+  const getAllBooking = async () => {
     console.log("Retrieving all documents from the 'bookings' collection...")
 
     try {
@@ -66,7 +68,7 @@ const ManageBookingsScreen = ({ navigation, route }) => {
         console.log("Booking data:")
         console.log(currDoc.data())
 
-        if (currDoc.data().ownerEmail == userEmail) {
+        if (currDoc.data().ownerEmail == loggedInUser.email) {
 
           const renter = searchUserByEmail(currDoc.data().renterEmail)
           const bookingItem = searchItemByID(currDoc.data().itemID)
@@ -78,7 +80,6 @@ const ManageBookingsScreen = ({ navigation, route }) => {
             ...currDoc.data()
           }
 
-          console.log(booking)
           resultsFromDB.push(booking)
         }
       })
@@ -174,16 +175,20 @@ const ManageBookingsScreen = ({ navigation, route }) => {
           console.log(`DEBUG --- userFromFirebaseAuth : ${JSON.stringify(userFromFirebaseAuth)}`);
           console.log(`Currently logged in user : ${userFromFirebaseAuth.email}`)
 
-          Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+          // Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
           //set the user info to loggedInUser state
+          setLoggedInUser(userFromFirebaseAuth)
+
+          //when getAll users and Items finishes retrieving data, bookingStart signal is set to true 
+          //but users and items array is still empty until the screen refresh
           const promises = [getAllUsers(), getAllItems()]
           Promise.allSettled(promises).then(() => {
-            setLoggedInUser(userFromFirebaseAuth)
-            console.log(loggedInUser)
             console.log("start running get all booking")
-            getAllBooking(userFromFirebaseAuth.email)
+            setBookingStart(true)
           })
-        } else {
+
+        }
+        else {
           //if not, we don't have access to currently logged in user
           setLoggedInUser(null)
         }
@@ -192,6 +197,28 @@ const ManageBookingsScreen = ({ navigation, route }) => {
       return listener
     }
   }, [isUserOnThisScreen])
+
+  //whenever useEffect is run, the screen refreshes so users and items array is not empty
+  //when booking start is updated, this useEffect take action
+  //if bookingStart is true then getAll booking is run
+  //when it finishes, set bookingEnd to true, sigifying that booking have completed
+  //but bookings array is still empty until the screen refresh again
+  useEffect(() => {
+    if (bookingStart == true) {
+      getAllBooking().then(() => {
+        setBookingEnd(true)
+      })
+    }
+  }, [bookingStart]);
+
+  //when booking end is updated, this useEffect take action and refresh the screen again
+  //screen refreshes -> bookings array no longer empty
+  //since bookingEnd is true, flatlist finally renders
+  useEffect(() => {
+    if (bookingEnd == true) {
+      setBookingStart(false)
+    }
+  }, [bookingEnd]);
 
   const cancelBooking = async (bookingId) => {
     try {
@@ -202,7 +229,8 @@ const ManageBookingsScreen = ({ navigation, route }) => {
       const promises = [getAllUsers(), getAllItems()]
       Promise.allSettled(promises).then(() => {
         console.log("start running get all booking")
-        getAllBooking(userFromFirebaseAuth.email)
+        setBookingStart(true)
+        setBookingEnd(false)
       })
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -211,28 +239,38 @@ const ManageBookingsScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={{ marginBottom: 16, textAlign: "center" }}>Hello <Text style={{ fontWeight: "bold" }}>{routeEmail}</Text>, theses are your current bookings...</Text>
-      <FlatList
-        data={bookings}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <View style={styles.bookingItem}>
-
-            {/* need await, won't work until item and user getting is done before booking getting start */}
-
-            <Text><Text style={{ fontWeight: "bold" }}>Laptop:</Text> {item.bookingItem.brand} {item.bookingItem.screenSize}" {item.bookingItem.model}</Text>
-            <Text><Text style={{ fontWeight: "bold" }}>Total Price:</Text> ${item.bookingItem.price}</Text>
-            <Text><Text style={{ fontWeight: "bold" }}>Renter:</Text> {item.renter.name}</Text>
-            <Image source={{ uri: item.bookingItem.imageURL }} height={50} width={50} />
-            <Text>Status: <Text style={{ fontWeight: "bold" }}>{item.status}</Text></Text>
-            <Text style={{marginBottom: 8}}><Text style={{ fontWeight: "bold" }}>Confirmation Code:</Text> {item.bookingID}</Text>
-            {item.status !== 'CANCELED' && (
-              <Button title="Cancel Booking" onPress={() => cancelBooking(item.id)} />
+      {
+        (bookingEnd == true)
+          ?
+          <Text style={{ marginBottom: 16, textAlign: "center" }}>Hello <Text style={{ fontWeight: "bold" }}>{loggedInUser.email}</Text>, theses are your current bookings...</Text>
+          :
+          <Text></Text>
+      }
+      {
+        // Flatlist only render when bookingEnd signal is true
+        (bookingEnd == true)
+          ?
+          <FlatList
+            data={bookings}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <View style={styles.bookingItem}>
+                <Text><Text style={{ fontWeight: "bold" }}>Laptop:</Text> {item.bookingItem.brand} {item.bookingItem.screenSize}" {item.bookingItem.model}</Text>
+                <Text><Text style={{ fontWeight: "bold" }}>Total Price:</Text> ${item.bookingItem.price}</Text>
+                <Text><Text style={{ fontWeight: "bold" }}>Renter:</Text> {item.renter.name}</Text>
+                <Image source={{ uri: item.renter.imageURL }} height={50} width={50} />
+                <Text>Status: <Text style={{ fontWeight: "bold" }}>{item.status}</Text></Text>
+                <Text style={{ marginBottom: 8 }}><Text style={{ fontWeight: "bold" }}>Confirmation Code:</Text> {item.bookingID}</Text>
+                {item.status !== 'CANCELED' && (
+                  <Button title="Cancel Booking" onPress={() => cancelBooking(item.id)} />
+                )}
+              </View>
             )}
-          </View>
-        )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-      />
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+          />
+          :
+          <Text></Text>
+      }
     </View>
   );
 };
