@@ -175,7 +175,7 @@ const MyReservationsScreen = ({ navigation }) => {
           console.log(`DEBUG --- userFromFirebaseAuth : ${JSON.stringify(userFromFirebaseAuth)}`);
           console.log(`Currently logged in user : ${userFromFirebaseAuth.email}`)
 
-          Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
+          // Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
           //set the user info to loggedInUser state
           setLoggedInUser(userFromFirebaseAuth)
 

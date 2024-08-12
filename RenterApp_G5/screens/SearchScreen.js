@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { View, StyleSheet, Button, Alert, Platform, StatusBar, Text, SafeAreaView, Pressable, Image } from 'react-native';
-import MapView, { Marker, Callout } from 'react-native-maps';
+import MapView, { Marker } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { collection, getDocs, addDoc } from 'firebase/firestore';
 import { db } from '../FirebaseConfig';
@@ -9,12 +9,12 @@ import { onAuthStateChanged } from 'firebase/auth';
 import { StackActions, useIsFocused, useLinkProps } from "@react-navigation/native";
 
 
-const SearchScreen = ({navigation}) => {
+const SearchScreen = ({ navigation }) => {
   const [userLat, setUserLat] = useState(null)
   const [userLng, setUserLng] = useState(null)
   const [userCity, setUserCity] = useState(null)
   const [loggedInUser, setLoggedInUser] = useState(null)
-  const [items, setItems] = useState(null)
+  const [items, setItems] = useState([])
   const [getItemStart, setGetItemStart] = useState(false)
   const [getItemEnd, setGetItemEnd] = useState(false)
   const [itemCoords, setItemCoords] = useState([])
@@ -50,7 +50,7 @@ const SearchScreen = ({navigation}) => {
   const doFwdGeocode = async (address) => {
     try {
       const geocodedLocation = await Location.geocodeAsync(address)
-      console.log(geocodedLocation) // array of possible locations
+      // console.log(geocodedLocation) // array of possible locations
 
       const result = geocodedLocation[0]
       if (result === undefined) {
@@ -60,8 +60,8 @@ const SearchScreen = ({navigation}) => {
 
       setItemCoords(itemCoords => [...itemCoords, result])
 
-      console.log(`Latitude: ${result.latitude}`)
-      console.log(`Longitude: ${result.longitude}`)
+      // console.log(`Latitude: ${result.latitude}`)
+      // console.log(`Longitude: ${result.longitude}`)
     } catch (err) {
       console.log(err)
     }
@@ -207,60 +207,34 @@ const SearchScreen = ({navigation}) => {
     }
   }, [isUserOnThisScreen])
 
-  /* useEffect(() => {
-    doReverseGeocode().then(() => {
-      setGetItemStart(true)
-    })
-  }, [userLat]);
-
-  useEffect(() => {
-    if (getItemStart == true) {
-      getAllItems().then(() => {
-        setGetItemEnd(true)
-      })
-    }
-  }, [getItemStart]);
-
-  useEffect(() => {
-    if (getItemEnd == true) {
-      console.log(items)
-      setGetItemStart(false)
-    }
-  }, [getItemEnd]); */
-
   return (
     <SafeAreaView styles={styles.container}>
 
       <View>
-        <MapView style={styles.map} ref={mapRef} pointerEvents="box-none">
-          <View>
-            {(items != null)
-              ?
-              <View>
-                {items.map((item, index) => {
-                  return (
-                    <Marker
-                      onPress={() => setSelectedItemIndex(index)}
-                      coordinate={{ latitude: itemCoords[index].latitude, longitude: itemCoords[index].longitude }}>
-                      <Pressable
-                        style={{ backgroundColor: "white", borderRadius: 10, borderColor: "white", borderWidth: 3 }}>
-                        <Text>${item.price}</Text>
-                      </Pressable>
-                    </Marker>
-                  )
-                })
-                }
-              </View>
-              :
-              <View></View>}
-          </View>
+        <MapView showsUserLocation={true} style={styles.map} ref={mapRef} pointerEvents="box-none">
+          {items.map((item, index) => {
+            return (
+              <Marker
+                key={item.itemID}
+                onPress={() => setSelectedItemIndex(index)}
+                coordinate={{ latitude: itemCoords[index].latitude, longitude: itemCoords[index].longitude }}>
+                <Pressable
+                  style={{ backgroundColor: "white", borderRadius: 10, borderColor: "white", borderWidth: 3 }}>
+                  <Text>${item.price}</Text>
+                </Pressable>
+              </Marker>
+            )
+          })
+          }
         </MapView>
         {(selectedItemIndex != null)
           ?
-          <View>
-            <Image source={{ uri: items[selectedItemIndex].imageURL }} height={150} width={250} />
-            <Text>{items[selectedItemIndex].model}</Text>
-            <Text>{items[selectedItemIndex].brand}</Text>
+          <View style={{margin: 15}}>
+            <Text style={{fontWeight: "bold", fontSize: 25, marginBottom: 10}}>{items[selectedItemIndex].brand} {items[selectedItemIndex].screenSize}" {items[selectedItemIndex].model}</Text>
+            <Image style={{borderWidth: 1, borderRadius: 10, marginBottom: 10}} source={{ uri: items[selectedItemIndex].imageURL }} height={150} width={250} />  
+            <Text style={{marginBottom: 5}}><Text style={{fontWeight: "bold"}}>Rental Price:</Text> ${items[selectedItemIndex].price}/day</Text>          
+            <Text style={{marginBottom: 5}}><Text style={{fontWeight: "bold"}}>Pickup Address:</Text> {items[selectedItemIndex].address}</Text>
+            <Text style={{marginBottom: 20}}><Text style={{fontWeight: "bold"}}>Contact Email:</Text> {items[selectedItemIndex].ownerEmail}</Text>            
             <Button title="Book Now" onPress={handleBookNow} />
           </View>
           :

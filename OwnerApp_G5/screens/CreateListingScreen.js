@@ -46,19 +46,6 @@ const CreateListingScreen = ({ navigation }) => {
     }
   }, [isUserOnThisScreen])
 
-  // const pickImage = async () => {
-  //   const result = await ImagePicker.launchImageLibraryAsync({
-  //     mediaTypes: ImagePicker.MediaTypeOptions.Images,
-  //     allowsEditing: true,
-  //     aspect: [4, 3],
-  //     quality: 1,
-  //   });
-
-  //   if (!result.canceled) {
-  //     setImageUri(result.uri);
-  //   }
-  // };
-
   const ManageListingsPressed = () => {
     console.log(`making listings pressed`);
     navigation.dispatch(StackActions.pop(1))
@@ -118,8 +105,6 @@ const CreateListingScreen = ({ navigation }) => {
             value={screenSize}
             onChangeText={setScreenSize}
           />
-          {/* <Button title="Pick Image" onPress={pickImage} />
-      {imageUri ? <Image source={{ uri: imageUri }} style={styles.image} /> : null} */}
 
           <TextInput
             style={styles.input}
