@@ -12,7 +12,7 @@ import { StackActions, useIsFocused, useLinkProps } from "@react-navigation/nati
 const SearchScreen = () => {
   const [userLat, setUserLat] = useState(null)
   const [userLng, setUserLng] = useState(null)
-  const [userCity, setUserCity] = useState("Toronto")
+  const [userCity, setUserCity] = useState(null)
   const [loggedInUser, setLoggedInUser] = useState(null)
   const [items, setItems] = useState(null)
   const [getItemStart, setGetItemStart] = useState(false)
