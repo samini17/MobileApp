@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { View, StyleSheet, Button, Alert, Platform, StatusBar, Text, SafeAreaView, Pressable } from 'react-native';
+import { View, StyleSheet, Button, Alert, Platform, StatusBar, Text, SafeAreaView, Pressable, Image } from 'react-native';
 import MapView, { Marker, Callout } from 'react-native-maps';
 import * as Location from 'expo-location';
 import { collection, getDocs } from 'firebase/firestore';
@@ -18,6 +18,10 @@ const SearchScreen = () => {
   const [getItemStart, setGetItemStart] = useState(false)
   const [getItemEnd, setGetItemEnd] = useState(false)
   const [itemCoords, setItemCoords] = useState([])
+
+
+  // selected bookingItem index
+  const [selectedItemIndex, setSelectedItemIndex] = useState(null)
 
   // ref - used to move the map to a specific location
   const mapRef = useRef(null)
@@ -56,8 +60,6 @@ const SearchScreen = () => {
 
       setItemCoords(itemCoords => [...itemCoords, result])
 
-      console.log(result)
-      console.log("HELOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
       console.log(`Latitude: ${result.latitude}`)
       console.log(`Longitude: ${result.longitude}`)
     } catch (err) {
@@ -125,8 +127,8 @@ const SearchScreen = () => {
     }
   }
 
-  const handleBookNow = (listingId) => {
-    Alert.alert('Booking', `Booking for listing ${listingId} is pending approval`);
+  const handleBookNow = () => {
+    Alert.alert('Booking', `Booking for ${items[selectedItemIndex].model} is pending approval`);
   };
 
   //get All document from booking from owner email
@@ -217,19 +219,18 @@ const SearchScreen = () => {
     <SafeAreaView styles={styles.container}>
 
       <View>
-        <MapView style={styles.map} ref={mapRef}>
+        <MapView style={styles.map} ref={mapRef} pointerEvents="box-none">
           <View>
             {(items != null)
               ?
               <View>
                 {items.map((item, index) => {
                   return (
-                    // place holder latitude and longtitude
-                    // should be
-                    // <Marker coordinate={{ latitude: itemCoords[index].latitude, longitude: itemCoords[index].longitude }}>
-                    // -- Fixed --
-                    <Marker coordinate={{ latitude: itemCoords[index].latitude, longitude: itemCoords[index].longitude }}>
-                      <Pressable style={{ backgroundColor: "white", borderRadius: 10, borderColor: "white", borderWidth: 3 }}>
+                    <Marker
+                      onPress={() => setSelectedItemIndex(index)}
+                      coordinate={{ latitude: itemCoords[index].latitude, longitude: itemCoords[index].longitude }}>
+                      <Pressable
+                        style={{ backgroundColor: "white", borderRadius: 10, borderColor: "white", borderWidth: 3 }}>
                         <Text>{item.price}</Text>
                       </Pressable>
                     </Marker>
@@ -241,12 +242,17 @@ const SearchScreen = () => {
               <View></View>}
           </View>
         </MapView>
-        <Text>User Lat: {userLat}</Text>
-        <Text>User long: {userLng}</Text>
-        <Text>User City: {userCity}</Text>
+        {(selectedItemIndex != null)
+          ?
+          <View>
+            <Image source={{ uri: items[selectedItemIndex].imageURL }} height={150} width={250} />
+            <Text>{items[selectedItemIndex].model}</Text>
+            <Text>{items[selectedItemIndex].brand}</Text>
+            <Button title="Book Now" onPress={handleBookNow} />
+          </View>
+          :
+          <View></View>}
       </View>
-
-
     </SafeAreaView>
   );
 };
@@ -257,6 +263,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
     paddingTop: (Platform.OS === "android") ? StatusBar.currentHeight : 0,
   },
   text: {
