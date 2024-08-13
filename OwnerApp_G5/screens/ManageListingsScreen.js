@@ -22,10 +22,13 @@ const ManageListingsScreen = ({ navigation }) => {
     navigation.dispatch(StackActions.pop(1))
   }
 
-  const deleteListing = async (listingId) => {
+  const deleteListing = async (listingId, itemID) => {
     try {
       await deleteDoc(doc(db, "bookingItems", listingId))
       Alert.alert('Success', 'Listing deleted');
+      // deletes all bookings for that specific booking item being deleted
+      getAllBookingByItemID(itemID)
+      // refresh booking items
       getAllItems()
     } catch (error) {
       Alert.alert('Error', error.message);
@@ -57,6 +60,32 @@ const ManageListingsScreen = ({ navigation }) => {
       })
 
       setItems(resultsFromDB)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const deleteBooking = async (id) => {
+    try {
+      await deleteDoc(doc(db, "bookings", id))
+      Alert.alert('Success', 'Listing deleted');
+    } catch (error) {
+      Alert.alert('Error', error.message);
+    }
+  };
+
+  //called to delete all bookings of the item being deleted
+  const getAllBookingByItemID = async (itemID) => {
+
+    try {
+      const querySnapshot = await getDocs(collection(db, "bookings"))
+
+      querySnapshot.forEach((currDoc) => {
+
+        if (currDoc.data().itemID == itemID) {
+          deleteBooking(currDoc.id)
+        }
+      })
     } catch (err) {
       console.log(err)
     }
@@ -143,7 +172,7 @@ const ManageListingsScreen = ({ navigation }) => {
                 <Image source={{ uri: item.imageURL }} height={50} width={50} />
                 <Text><Text style={{ fontWeight: "bold" }}>Renting Price:</Text> ${item.price}</Text>
                 <Text style={{ marginBottom: 8 }}><Text style={{ fontWeight: "bold" }}>Address:</Text> {item.address}, {item.city}</Text>
-                <Button title="Delete Listing" onPress={() => deleteListing(item.id)} />
+                <Button title="Delete Listing" onPress={() => deleteListing(item.id, item.itemID)} />
               </View>
             )}
             ItemSeparatorComponent={() => <View style={styles.separator} />}
