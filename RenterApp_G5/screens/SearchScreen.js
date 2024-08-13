@@ -10,13 +10,8 @@ import { StackActions, useIsFocused, useLinkProps } from "@react-navigation/nati
 
 
 const SearchScreen = ({ navigation }) => {
-  const [userLat, setUserLat] = useState(null)
-  const [userLng, setUserLng] = useState(null)
-  const [userCity, setUserCity] = useState(null)
   const [loggedInUser, setLoggedInUser] = useState(null)
   const [items, setItems] = useState([])
-  const [getItemStart, setGetItemStart] = useState(false)
-  const [getItemEnd, setGetItemEnd] = useState(false)
   const [itemCoords, setItemCoords] = useState([])
 
 
@@ -85,8 +80,6 @@ const SearchScreen = ({ navigation }) => {
         return
       }
 
-      setUserCity(result.city)
-
       await getAllItems(result.city)
 
     } catch (err) {
@@ -103,12 +96,6 @@ const SearchScreen = ({ navigation }) => {
 
       console.log(`The current location is:`)
       console.log(location)
-
-      // Output device location to screen
-      //setCurrLocationLabel(`Current location: ${JSON.stringify(location)}`)
-      //alert(JSON.stringify(location))
-      setUserLat(location.coords.latitude)
-      setUserLng(location.coords.longitude)
 
       // Move the map to the user's location
       // a. Create a region with the user's location at the center
@@ -188,14 +175,8 @@ const SearchScreen = ({ navigation }) => {
           console.log(`DEBUG --- userFromFirebaseAuth : ${JSON.stringify(userFromFirebaseAuth)}`);
           console.log(`Currently logged in user : ${userFromFirebaseAuth.email}`)
 
-          // Alert.alert(`Currently logged in user : ${userFromFirebaseAuth.email}`)
           //set the user info to loggedInUser state
           setLoggedInUser(userFromFirebaseAuth)
-
-          // const promises = [getCurrLocation()]
-          // Promise.allSettled(promises).then(() => {
-          //   setGetItemStart(true)
-          // })
           getCurrLocation();
         } else {
           //if not, we don't have access to currently logged in user
@@ -234,6 +215,7 @@ const SearchScreen = ({ navigation }) => {
             <Image style={{borderWidth: 1, borderRadius: 10, marginBottom: 10}} source={{ uri: items[selectedItemIndex].imageURL }} height={150} width={250} />  
             <Text style={{marginBottom: 5}}><Text style={{fontWeight: "bold"}}>Rental Price:</Text> ${items[selectedItemIndex].price}/day</Text>          
             <Text style={{marginBottom: 5}}><Text style={{fontWeight: "bold"}}>Pickup Address:</Text> {items[selectedItemIndex].address}</Text>
+            <Text style={{marginBottom: 5}}><Text style={{fontWeight: "bold"}}>City:</Text> {items[selectedItemIndex].city}</Text>
             <Text style={{marginBottom: 20}}><Text style={{fontWeight: "bold"}}>Contact Email:</Text> {items[selectedItemIndex].ownerEmail}</Text>            
             <Button title="Book Now" onPress={handleBookNow} />
           </View>
